@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.dao.BlogDao">
+
+    <select id="getBlog" resultType="com.young.entities.Blog">
+        select * from t_blog where id=#{id}
+    </select>
+
+    <resultMap id="blog" type="com.young.entities.Blog">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="recommend" column="recommend"/>
+        <result property="typeId" column="type_id"/>
+        <result property="description" column="description"/>
+        <result property="content" column="content"/>
+        <result property="flag" column="flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="commentabled" column="commentabled"/>
+        <result property="firstPicture" column="first_picture"/>
+        <result property="shareStatement" column="share_statement"/>
+        <result property="appreciation" column="appreciation"/>
+        <result property="userId" column="user_id"/>
+        <result property="views" column="views"/>
+        <association property="type" javaType="com.young.entities.Type">
+            <id property="id" column="id"/>
+            <result property="name" column="name"/>
+        </association>
+    </resultMap>
+
+    <select id="getAllBlog" resultMap="blog">
+        select b.id,b.title,b.update_time,b.recommend,b.type_id,t.id,t.name,b.description,b.content,b.flag,
+        b.create_time,b.commentabled,b.first_picture,b.share_statement,b.appreciation,b.user_id,b.views
+        from t_blog b left outer join
+        t_type t on b.type_id = t.id order by b.update_time desc
+    </select>
+
+
+    <insert id="saveBlog" parameterType="com.young.entities.Blog">
+        insert into t_blog (id,title, content, first_picture, flag,
+        views, appreciation, share_statement, commentabled,published,
+        recommend, create_time, update_time, type_id,tag_ids, user_id, description)
+        values (#{id},#{title},#{content},#{firstPicture},#{flag},#{views},#{appreciation},
+        #{shareStatement},#{commentabled},#{published},#{recommend},#{createTime},
+        #{updateTime},#{typeId},#{tagIds},#{userId},#{description});
+    </insert>
+
+    <update id="updateBlog" parameterType="com.young.entities.Blog">
+        update t_blog set published = #{published},flag = #{flag} ,
+        title = #{title}, content = #{content}, type_id = #{typeId}, tag_ids = #{tagIds},
+        first_picture = #{firstPicture} , description = #{description} , recommend = #{recommend} ,
+        share_statement = #{shareStatement}, appreciation = #{appreciation},
+        commentabled = #{commentabled} ,update_time = #{updateTime} where id = #{id};
+    </update>
+
+    <delete id="deleteBlog">
+        delete from t_blog where id = #{id}
+    </delete>
+
+    <resultMap id="detailedBlog" type="com.young.dto.DetailedBlog">
+        <id property="id" column="bid"/>
+        <result property="firstPicture" column="first_picture"/>
+        <result property="flag" column="flag"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="views" column="views"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="commentabled" column="commentabled"/>
+        <result property="shareStatement" column="share_statement"/>
+        <result property="appreciation" column="appreciation"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+        <collection property="tags" ofType="com.young.entities.Tag">
+            <id property="id" column="tid"/>
+            <result property="name" column="name"/>
+        </collection>
+    </resultMap>
+
+    <select id="getDetailedBlog" resultMap="detailedBlog">
+        select b.id bid,b.first_picture,b.flag,b.title,b.content,b.views,b.update_time,b.commentabled,b.share_statement,b.appreciation, u.nickname,u.avatar,
+        t.id tid ,t.name
+        from t_blog b,t_user u,t_tag t,t_blog_tags tb
+        where b.user_id = u.id and tb.blog_id = b.id and tb.tag_id = t.id and  b.id = #{id}
+    </select>
+
+    <resultMap id="firstPageBlog" type="com.young.dto.FirstPageBlog">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="firstPicture" column="first_picture"/>
+        <result property="views" column="views"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="description" column="description"/>
+
+        <result property="typeName" column="name"/>
+
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+    </resultMap>
+
+    <select id="getSearchBlog" resultMap="firstPageBlog">
+        <bind name="pattern" value="'%' + query + '%'" />
+        select b.id,b.title,b.first_picture, b.views,b.update_time,b.description,
+        t.name ,
+        u.nickname, u.avatar
+        from t_blog b, t_type t,t_user u
+        where b.type_id = t.id and  u.id = b.user_id and (b.title like #{pattern} or b.content like  #{pattern})
+        order by b.update_time desc
+    </select>
+
+    <select id="getByTypeId" resultMap="firstPageBlog">
+        select b.id,b.title,b.first_picture, b.views,b.update_time,b.description,
+        t.name ,
+        u.nickname, u.avatar
+        from blog.t_blog b, blog.t_type t,blog.t_user u
+        where b.type_id = t.id and u.id = b.user_id and b.type_id = #{typeId} order by b.update_time desc
+    </select>
+
+    <select id="getFirstPageBlog" resultMap="firstPageBlog">
+        select b.id,b.title,b.first_picture, b.views,b.update_time,b.description,
+        t.name ,
+        u.nickname, u.avatar
+        from t_blog b, t_type t,t_user u
+        where b.type_id = t.id and  u.id = b.user_id order by b.update_time desc
+    </select>
+
+    <select id="getByTagId" resultMap="firstPageBlog">
+        select b.id,b.title,b.first_picture,b.views,b.update_time,b.description,
+        t.name,
+        u.nickname,u.avatar
+        from t_blog b,t_type t,t_user u ,t_blog_tags tb,t_tag t1
+        where b.type_id = t.id and u.id = b.user_id and tb.blog_id = b.id and tb.tag_id = t1.id and t1.id = #{tagId}
+        order by b.update_time desc
+    </select>
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.young.dao.TypeDao">
+
+    <select id="getTypeById" resultType="com.young.entities.Type">
+        select * from t_type where id=#{id}
+    </select>
+
+    <select id="getTypeByName" resultType="com.young.entities.Type">
+        select * from t_type where name=#{name}
+    </select>
+    <!-- parameterType:参数类型，可以省略
+     useGeneratedKeys="true"；使用自增主键获取主键值策略
+      keyProperty；指定对应的主键属性，-->
+    <insert id="saveType" parameterType="com.young.entities.Type"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into t_type values(#{id},#{name})
+    </insert>
+
+    <select id="getAdminType" resultType="com.young.entities.Type">
+        select * from t_type
+    </select>
+
+    <delete id="deleteType">
+        delete from t_type where id=#{id}
+    </delete>
+
+    <update id="updateType" parameterType="com.young.entities.Type">
+        update t_type set name=#{name} where id=#{id}
+    </update>
+
+    <!-- 自定义某个javaBean的封装规则-->
+    <!--type：自定义规则的Java类型-->
+    <!-- id:唯一id方便引用-->
+    <resultMap id="type" type="com.young.entities.Type">
+        <!--指定主键列的封装规则
+      id定义主键会底层有优化；
+      column：指定哪一列
+      property：指定对应的javaBean属性
+        -->
+        <!--定义普通的封装规则-->
+        <id property="id" column="tid"/>
+        <result property="name" column="name"/>
+        <!--collection定义关联集合类型的属性的封装规则-->
+        <!-- ofType:指定集合里面元素的类型-->
+        <collection property="blogs" ofType="com.young.entities.Blog">
+            <!-- 定义这个集合中元素的封装规则 -->
+            <id property="id" column="bid"/>
+            <result property="title" column="title"/>
+            <result property="typeId" column="type_id"/>
+        </collection>
+    </resultMap>
+
+    <!-- 连接查询-->
+    <select id="getAllType" resultMap="type">
+        select t.id tid, t.name, b.id bid, b.title,b.type_id from t_type t,t_blog b where t.id = b.type_id
+    </select>
+</mapper>
